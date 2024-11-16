@@ -1,0 +1,119 @@
+# Calories Burnt Prediction Model
+
+# Import necessary libraries
+
+import io
+from google.colab import files  # Used to add files in the Colab notebook
+import numpy as np
+import pandas as pd
+import matplotlib.pyplot as plt
+import seaborn as sns
+from sklearn.model_selection import train_test_split
+from sklearn.linear_model import LinearRegression
+from sklearn.metrics import mean_squared_error, r2_score
+
+# Upload and load the dataset
+
+data = files.upload()
+df = pd.read_csv('calories.csv')
+
+# Explore the dataset
+
+print("Top 5 rows of the dataset:")
+print(df.head())
+
+print("\nShape of the dataset:")
+print(df.shape)
+
+print("\nData types in the dataset:")
+print(df.dtypes)
+
+print("\nDescriptive statistics:")
+print(df.describe())
+
+# Encode gender: Male = 1, Female = 0
+
+df.replace(to_replace='male', value=1, inplace=True)
+df.replace(to_replace='female', value=0, inplace=True)
+
+plt.figure(figsize=(10, 8))
+sns.heatmap(df.corr(), annot=True, cmap='coolwarm')
+plt.title('Feature Correlation Heatmap')
+plt.show()
+
+
+# Check for missing values
+
+print("\nNumber of missing values in each column:")
+print(df.isnull().sum())
+
+# Visualize relationships between variables
+
+df.plot.scatter(x='Height', y='Weight', title='Height vs Weight')
+plt.show()
+
+# Display updated DataFrame
+
+
+print("\nUpdated DataFrame with Gender encoded:")
+print(df.head())
+
+# Prepare the data for modeling
+
+features = ['Gender', 'Age', 'Height', 'Weight', 'Duration', 'Heart_Rate', 'Body_Temp']
+X = df[features]
+y = df['Calories']
+
+# Split the data into training and testing sets
+
+
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+
+# Initialize and train the Linear Regression model
+
+
+model = LinearRegression()
+model.fit(X_train, y_train)
+
+# Make predictions on the test set
+
+
+y_pred = model.predict(X_test)
+
+# Evaluate the model's performance
+
+print("\nModel Performance on Test Set:")
+print("Mean Squared Error:", mean_squared_error(y_test, y_pred))
+print("R-squared Score:", r2_score(y_test, y_pred))
+
+# User input for predicting calories burnt
+
+print("\nEnter the details to get the predicted calories burnt:")
+Gender = int(input("Enter Gender (1 for Male, 0 for Female): "))
+Age = int(input("Enter Age: "))
+Height = float(input("Enter Height (in cm): "))
+Weight = float(input("Enter Weight (in kg): "))
+Duration = float(input("Enter Duration (in minutes): "))
+Heart_Rate = int(input("Enter Heart Rate (in bpm): "))
+Body_Temp = float(input("Enter Body Temperature (in °C): "))
+predictor = pd.DataFrame([[Gender, Age, Height, Weight, Duration, Heart_Rate, Body_Temp]],
+                         columns=features)
+predicted_calories = model.predict(predictor)
+print("Predicted calories burnt:", predicted_calories[0])
+
+
+# Additional visualizations
+
+df.plot.scatter(x='Duration', y='Calories', title='Duration vs Calories')
+df.plot.scatter(x='Heart_Rate', y='Calories', title='Heart Rate vs Calories')
+df.plot.scatter(x='Body_Temp', y='Calories', title='Body Temperature vs Calories')
+plt.show()
+
+#Calories Burnt vs. Age (Line Plot)
+
+age_calories = df.groupby('Age')['Calories'].mean().reset_index()
+plt.plot(age_calories['Age'], age_calories['Calories'])
+plt.title('Average Calories Burnt vs. Age')
+plt.xlabel('Age')
+plt.ylabel('Average Calories Burnt')
+plt.show()
